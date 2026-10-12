@@ -6,6 +6,7 @@ import tn.esprit.tpfoyer.domain.Contrat;
 import tn.esprit.tpfoyer.exception.ResourceNotFoundException;
 import tn.esprit.tpfoyer.repository.IContratRepository;
 import tn.esprit.tpfoyer.service.IContratService;
+import tn.esprit.tpfoyer.service.INotificationService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 public class ContratServiceImpl implements IContratService {
 
     private final IContratRepository contratRepository;
+    private final INotificationService notificationService;
 
     @Override
     public Contrat create(Contrat contrat) {
