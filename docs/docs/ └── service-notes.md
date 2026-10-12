@@ -1,103 +1,177 @@
-# Atelier 4 — IoC, Injection de dépendances et couche Service
+# Atelier 4 — IoC, injection de dépendances et couche Service
 
-## A. Injection de dépendances
+**Projet : AutoLoc**  
+**Technologies :** Java 17+, Spring Boot, Spring Data JPA, Lombok, Maven, SonarQube for IDE
 
-### Injection par champ
+## A. Comparaison des modes d'injection
 
-L'injection par champ utilise `@Autowired` directement sur un attribut. Elle permet à Spring d'injecter automatiquement une dépendance, mais rend les dépendances moins explicites et complique les tests unitaires.
+| Critère | Injection par constructeur | Injection par attribut |
+|---|---|---|
+| Principe | Dépendance fournie au constructeur | Dépendance injectée directement dans un champ avec `@Autowired` |
+| Champ `final` | Oui | Non, dans le cas de l'injection habituelle |
+| Dépendance explicite | Oui, dans la signature du constructeur | Non, elle est cachée dans les attributs |
+| Utilisation hors du conteneur Spring | Oui, en fournissant les dépendances au constructeur | Risque de dépendance `null` lors d'une instanciation manuelle |
+| Tests unitaires | Faciles, avec des repositories simulés | Plus difficiles, car les dépendances sont injectées dans les champs |
+| SonarQube for IDE | Mode recommandé | Règle S6813 à vérifier selon l'analyse |
+| Choix pour AutoLoc | Retenu | Testé temporairement, puis abandonné |
 
-### Injection par constructeur
+Nous avons retenu l'injection par constructeur pour les services AutoLoc.
 
-L'injection par constructeur permet de déclarer explicitement les dépendances nécessaires au fonctionnement d'un service.
+Les classes utilisent `@Service`, `@RequiredArgsConstructor` et un attribut `private final` pour leur repository.
 
-Dans notre projet AutoLoc, nous utilisons `@RequiredArgsConstructor` de Lombok et des attributs `final`.
+Lombok génère le constructeur nécessaire. Spring l'utilise automatiquement pour injecter le repository, sans avoir besoin de `@Autowired` sur un constructeur unique.
 
-**Choix retenu :** injection par constructeur, car elle favorise l'immutabilité des références, facilite les tests et évite les dépendances cachées.
+L'injection par setter constitue un troisième mode, adapté principalement aux dépendances optionnelles ou modifiables. Elle n'est pas retenue pour les dépendances obligatoires de nos services.
 
 ## B. Services et dépendances
 
-| Service | Repository injecté | Opérations |
-|---|---|---|
-| AgenceServiceImpl | IAgenceRepository | CRUD |
-| ClientServiceImpl | IClientRepository | CRUD |
-| ContratServiceImpl | IContratRepository | CRUD |
-| EmployeServiceImpl | IEmployeRepository | CRUD |
-| EquipementServiceImpl | IEquipementRepository | CRUD |
-| MaintenanceServiceImpl | IMaintenanceRepository | CRUD |
-| PaiementServiceImpl | IPaiementRepository | Lecture seule |
-| ReservationServiceImpl | IReservationRepository | CRUD |
-| VehiculeServiceImpl | IVehiculeRepository | CRUD |
+| Service | Dépendance injectée | Mode | Justification |
+|---|---|---|---|
+| AgenceServiceImpl | IAgenceRepository | Constructeur | Gérer les agences et valider les informations obligatoires |
+| ClientServiceImpl | IClientRepository | Constructeur | Gérer les clients et contrôler leurs informations d'identification |
+| ContratServiceImpl | IContratRepository | Constructeur | Gérer les contrats et valider les montants |
+| EmployeServiceImpl | IEmployeRepository | Constructeur | Gérer les employés et leurs informations obligatoires |
+| EquipementServiceImpl | IEquipementRepository | Constructeur | Gérer les équipements et vérifier leur libellé |
+| MaintenanceServiceImpl | IMaintenanceRepository | Constructeur | Gérer les maintenances et vérifier la cohérence des dates |
+| PaiementServiceImpl | IPaiementRepository | Constructeur | Consulter les paiements sans exposer de modification directe |
+| ReservationServiceImpl | IReservationRepository | Constructeur | Gérer les réservations et valider leurs dates |
+| VehiculeServiceImpl | IVehiculeRepository | Constructeur | Gérer les véhicules et vérifier les données obligatoires et le tarif |
 
-Les services sont annotés avec `@Service` et utilisent l'injection par constructeur.
+Les services CRUD exposent cinq méthodes : `create`, `findById`, `findAll`, `update` et `deleteById`.
 
-La couche Service centralise les validations métier et sépare la logique applicative de la couche d'accès aux données.
+Le service Paiement est volontairement limité à `findById` et `findAll`, conformément à l'énoncé.
 
-## C. Diagnostic des erreurs Spring
+Les principales règles appliquées sont les suivantes :
 
-### Erreur 1 — Missing Bean
+- Une création refuse un identifiant déjà renseigné.
+- Une recherche ou une suppression d'un élément inexistant déclenche `ResourceNotFoundException`.
+- Une mise à jour charge l'entité existante, recopie ses champs modifiables, puis l'enregistre.
+- Les valeurs métier invalides provoquent une `IllegalArgumentException`.
+- Les services ne conservent aucun état propre à une requête.
+- Les relations entre entités sont conservées sans ajouter de gestion métier des associations, prévue dans un chapitre ultérieur.
 
-**Cause :** `ContratServiceImpl` dépendait d'une interface `MissingService` sans implémentation enregistrée dans Spring.
+Les validations ont été adaptées aux attributs réellement présents dans les entités du projet.
 
-**Résultat attendu :** échec du démarrage avec un message indiquant qu'aucun bean correspondant n'a été trouvé.
+## C. Diagnostic des trois messages d'erreur Spring
 
-**Correction :** suppression de la dépendance inutile.
+### Message 1 — Bean IContratService introuvable
 
-### Erreur 2 — Multiple Beans
+**Exception :** `NoSuchBeanDefinitionException`, généralement remontée dans une `UnsatisfiedDependencyException`.
 
-**Cause :** deux classes, `EmailNotificationService` et `SmsNotificationService`, implémentaient `INotificationService`.
+**Bean concerné :** `IContratService`, demandé par `ContratController`.
 
-Spring ne pouvait pas choisir automatiquement entre les deux.
+**Deux causes probables :**
 
-**Correction :** utilisation de `@Qualifier("emailNotificationService")` sur le paramètre du constructeur.
+1. `ContratServiceImpl` ne possède pas l'annotation `@Service`.
+2. `ContratServiceImpl` est placé dans un package qui n'est pas couvert par le component scan de Spring.
 
-### Erreur 3 — Circular Dependency
+**Correction :** ajouter ou restaurer `@Service` sur `ContratServiceImpl`, puis vérifier que la classe se trouve dans un package analysé par Spring Boot.
 
-**Cause :** `ServiceA` dépendait de `ServiceB`, tandis que `ServiceB` dépendait de `ServiceA`.
+### Message 2 — Plusieurs beans pour une même interface
 
-**Correction :** suppression de la dépendance de `ServiceB` vers `ServiceA`, afin d'obtenir une dépendance à sens unique.
+**Exception :** `NoUniqueBeanDefinitionException`.
 
-Les versions contenant les erreurs et leurs corrections sont conservées dans l'historique Git du projet.
+**Bean concerné :** la dépendance du contrôleur de notification, pour laquelle deux implémentations existent : `emailNotificateur` et `smsNotificateur`.
+
+**Cause :** Spring trouve plusieurs beans compatibles et ne sait pas lequel injecter.
+
+**Deux corrections possibles :**
+
+1. Ajouter `@Primary` sur la classe d'implémentation à privilégier. Cette annotation définit le bean prioritaire.
+2. Ajouter `@Qualifier("emailNotificateur")` sur le paramètre du constructeur du consommateur pour sélectionner explicitement le bean voulu.
+
+`@Primary` définit un choix par défaut, tandis que `@Qualifier` sélectionne une implémentation à un point d'injection précis.
+
+### Message 3 — Dépendance circulaire
+
+**Exception :** `BeanCurrentlyInCreationException`, éventuellement incluse dans une erreur de création de bean.
+
+**Beans concernés :** `clientServiceImpl` et `reservationServiceImpl`.
+
+**Cause :** le premier service dépend du second, qui dépend à son tour du premier.
+
+**Pourquoi l'injection par constructeur bloque-t-elle ?**
+
+Chaque objet doit recevoir toutes ses dépendances au moment de sa construction. Spring ne peut donc pas terminer la création du premier service sans créer le second, qui exige lui-même le premier.
+
+**Correction :** revoir la conception pour supprimer la dépendance réciproque, par exemple en extrayant une responsabilité commune dans un troisième service ou en organisant les appels dans un seul sens.
 
 ## D. Analyse SonarQube for IDE
 
-### Règle S6813 — Field Injection
+| Règle | Anomalie | Explication | Correction |
+|---|---|---|---|
+| S6813 | Injection par attribut | L'utilisation de `@Autowired` sur un champ masque les dépendances et complique les tests | Retour à l'injection par constructeur avec `@RequiredArgsConstructor` et champ `final` |
+| S112 | Exception générique | Une `RuntimeException` générique ne décrit pas précisément l'erreur métier | Utilisation de `ResourceNotFoundException` |
+| S1068 | Attribut privé inutilisé | Un attribut `notificationService` était déclaré sans être utilisé | Suppression de l'attribut inutile |
 
-L'injection par champ est déconseillée. Elle a été remplacée par l'injection par constructeur.
+**Précision sur les observations :**
 
-### Règle S1068 — Unused Private Field
+La règle S1068 a été observée dans SonarQube for IDE.
 
-SonarQube for IDE a signalé un attribut `notificationService` déclaré mais non utilisé.
+Les cas S6813 et S112 ont été étudiés dans les expériences prévues par l'atelier. Le déclenchement effectif de ces deux règles n'a pas été confirmé dans les résultats observés. Les corrections correspondantes ont néanmoins été appliquées.
 
-Cet attribut a été supprimé lors du nettoyage des classes temporaires.
-
-### Règle S112 — Generic Exceptions
-
-Une version temporaire de `ContratServiceImpl` utilisait `RuntimeException` pour signaler l'absence d'un contrat.
-
-La correction consiste à utiliser `ResourceNotFoundException`, une exception métier spécifique.
-
-Le code problématique et sa correction ont été conservés dans des commits distincts. La règle S112 n'a pas été observée dans les résultats affichés par le plugin pendant l'exercice.
+Les classes temporaires utilisées pour les expériences d'injection de dépendances ont été retirées du code final.
 
 ## E. Questions de compréhension
 
-### 1. Qu'est-ce que l'inversion de contrôle ?
+### 1. Où est le `new` de ContratServiceImpl et qui l'exécute ?
 
-L'inversion de contrôle (IoC) signifie que la création et la gestion des objets sont confiées au conteneur Spring plutôt qu'effectuées directement par les classes applicatives.
+Nous n'écrivons pas directement `new ContratServiceImpl(...)` dans le code applicatif.
 
-### 2. Quelle est la différence entre IoC et injection de dépendances ?
+Le conteneur IoC de Spring détecte `ContratServiceImpl` grâce à `@Service`, crée le bean et lui fournit son `IContratRepository` par injection au constructeur.
 
-L'IoC est un principe architectural. L'injection de dépendances est un mécanisme permettant de le mettre en œuvre.
+### 2. Pourquoi un contrôleur dépendra-t-il de IContratService et non de ContratServiceImpl ?
 
-### 3. Pourquoi utiliser `@Service` ?
+Dépendre de l'interface réduit le couplage entre le contrôleur et l'implémentation concrète.
 
-`@Service` permet à Spring de détecter une classe comme composant de la couche métier et de la gérer comme un bean.
+Il devient possible de remplacer l'implémentation du service, notamment lors des tests, sans modifier le contrôleur.
 
-### 4. Pourquoi préférer l'injection par constructeur ?
+Cela respecte le principe de dépendance envers les abstractions.
 
-Elle rend les dépendances explicites, permet d'utiliser des champs `final` et simplifie les tests unitaires.
+### 3. Pourquoi un service singleton doit-il rester sans état ? Donner un exemple de bug.
 
-### 5. Pourquoi séparer Repository et Service ?
+Un service Spring est singleton par défaut : la même instance peut être utilisée simultanément par plusieurs requêtes.
 
-Le Repository gère l'accès aux données et les opérations de persistance. Le Service contient les règles métier, les validations et l'orchestration des opérations.
+S'il stocke des données propres à une requête dans un attribut modifiable, plusieurs utilisateurs risquent de partager ou d'écraser ces données.
 
-Cette séparation améliore la lisibilité, la maintenance et la testabilité du projet.
+Par exemple, un attribut `contratCourant` dans `ContratServiceImpl` pourrait être remplacé par la requête d'un autre utilisateur avant la fin du traitement.
+
+Les données propres à chaque appel doivent donc rester dans les paramètres et variables locales des méthodes.
+
+### 4. Pourquoi update charge-t-il l'entité existante avant d'appeler save au lieu de lui passer directement l'objet reçu ?
+
+Charger l'entité existante permet de vérifier qu'elle existe et de modifier uniquement les champs autorisés.
+
+Enregistrer directement l'objet reçu risquerait d'écraser des champs non transmis, de modifier des relations ou de perturber les collections associées.
+
+La méthode `update` récupère donc l'entité, recopie les valeurs modifiables et appelle ensuite `save`.
+
+### 5. Quelle différence entre @Component et @Bean ? Entre @Primary et @Qualifier ? Pourquoi IPaiementService n'expose-t-il ni création, ni modification, ni suppression ?
+
+**`@Component` et `@Bean` :**
+
+`@Component` est placé sur une classe pour permettre sa détection automatique par Spring.
+
+`@Bean` est placé sur une méthode de configuration afin de déclarer explicitement l'objet que Spring doit gérer.
+
+**`@Primary` et `@Qualifier` :**
+
+`@Primary` indique l'implémentation prioritaire lorsqu'il existe plusieurs beans du même type.
+
+`@Qualifier` désigne précisément le bean à injecter pour une dépendance donnée.
+
+**`IPaiementService` :**
+
+Il expose uniquement `findById` et `findAll` parce que les opérations de création, modification et suppression des paiements doivent passer par le Contrat, conformément aux règles de l'atelier.
+
+Cela évite de modifier directement les paiements indépendamment de leur contrat.
+
+---
+
+## Conclusion
+
+L'Atelier 4 met en place une couche Service distincte de la couche Repository, en utilisant l'inversion de contrôle et l'injection de dépendances par constructeur.
+
+Cette architecture améliore la modularité, la maintenabilité et la testabilité du projet AutoLoc.
+
+Les contrôleurs REST et les tests fonctionnels seront traités dans l'Atelier 5.
