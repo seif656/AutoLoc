@@ -1,29 +1,19 @@
 package tn.esprit.tpfoyer.service.impl;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.tpfoyer.domain.Contrat;
-import tn.esprit.tpfoyer.exception.ResourceNotFoundException;
 import tn.esprit.tpfoyer.repository.IContratRepository;
 import tn.esprit.tpfoyer.service.IContratService;
-import tn.esprit.tpfoyer.service.INotificationService;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ContratServiceImpl implements IContratService {
 
     private final IContratRepository contratRepository;
-    private final INotificationService notificationService;
-
-    public ContratServiceImpl(
-            IContratRepository contratRepository,
-            @Qualifier("emailNotificationService") INotificationService notificationService
-    ) {
-        this.contratRepository = contratRepository;
-        this.notificationService = notificationService;
-    }
 
     @Override
     public Contrat create(Contrat contrat) {
@@ -42,7 +32,9 @@ public class ContratServiceImpl implements IContratService {
     @Override
     public Contrat findById(Long id) {
         return contratRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
+                .orElseThrow(() -> new RuntimeException(
+                        "Contrat introuvable avec l'identifiant " + id
+                ));
     }
 
     @Override
