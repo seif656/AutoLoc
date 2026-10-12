@@ -3,6 +3,7 @@ package tn.esprit.tpfoyer.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.tpfoyer.domain.Contrat;
+import tn.esprit.tpfoyer.exception.ResourceNotFoundException;
 import tn.esprit.tpfoyer.repository.IContratRepository;
 import tn.esprit.tpfoyer.service.IContratService;
 
@@ -32,9 +33,7 @@ public class ContratServiceImpl implements IContratService {
     @Override
     public Contrat findById(Long id) {
         return contratRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
-                        "Contrat introuvable avec l'identifiant " + id
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
     }
 
     @Override
@@ -51,6 +50,7 @@ public class ContratServiceImpl implements IContratService {
         validate(contrat);
 
         Contrat existing = findById(id);
+
         existing.setDateSignature(contrat.getDateSignature());
         existing.setMontantTotal(contrat.getMontantTotal());
         existing.setValide(contrat.isValide());
