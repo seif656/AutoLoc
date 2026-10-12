@@ -10,6 +10,7 @@ public class ServiceA {
     private final ServiceB serviceB;
 
     public void execute() {
+        serviceB.execute();
         System.out.println("Service A");
     }
 }
