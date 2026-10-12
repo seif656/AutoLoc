@@ -1,6 +1,6 @@
 package tn.esprit.tpfoyer.service.impl;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import tn.esprit.tpfoyer.domain.Contrat;
 import tn.esprit.tpfoyer.exception.ResourceNotFoundException;
@@ -12,11 +12,18 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ContratServiceImpl implements IContratService {
 
     private final IContratRepository contratRepository;
     private final INotificationService notificationService;
+
+    public ContratServiceImpl(
+            IContratRepository contratRepository,
+            @Qualifier("emailNotificationService") INotificationService notificationService
+    ) {
+        this.contratRepository = contratRepository;
+        this.notificationService = notificationService;
+    }
 
     @Override
     public Contrat create(Contrat contrat) {
