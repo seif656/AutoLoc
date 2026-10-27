@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -42,4 +43,8 @@ public class Paiement {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Contrat contrat;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference("contrat-paiements")
+    private Contrat contrats;
 }

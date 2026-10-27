@@ -68,6 +68,82 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Créer un contrat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\npm.test(\"Identifiant généré\", () => {\r\n    const body = pm.response.json();\r\n    pm.expect(body.idContrat).to.be.a(\"number\");\r\n    pm.environment.set(\"contratId\", body.idContrat);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"dateSignature\": \"2026-11-02\",\r\n  \"montantTotal\": 480.00,\r\n  \"valide\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contrats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contrats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Créer un contrat avec un identifiant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Identifiant fourni refusé : 400\", () => {\r\n    pm.response.to.have.status(400);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"idContrat\": 5,\r\n  \"dateSignature\": \"2026-11-02\",\r\n  \"montantTotal\": 480.00,\r\n  \"valide\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contrats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contrats"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }
