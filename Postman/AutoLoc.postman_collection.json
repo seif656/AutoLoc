@@ -12,6 +12,17 @@
       "item": [
         {
           "name": "Lister les contrats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"La réponse est un tableau\", () => {\r\n    pm.expect(pm.response.json()).to.be.an(\"array\");\r\n});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -23,6 +34,36 @@
               "path": [
                 "api",
                 "contrats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consulter un contrat inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Erreur métier lisible\", () => {\r\n    const body = pm.response.json();\r\n    pm.expect(body.statut).to.eql(404);\r\n    pm.expect(body.message).to.include(\"9999\");\r\n    pm.expect(body.horodatage).to.be.a(\"string\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/contrats/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contrats",
+                "9999"
               ]
             }
           },
