@@ -76,5 +76,6 @@ public class Vehicule {
             fetch = FetchType.LAZY,
             cascade = CascadeType.PERSIST
     )
+    @JsonIgnore
     private List<Maintenance> maintenances = new ArrayList<>();
 }
