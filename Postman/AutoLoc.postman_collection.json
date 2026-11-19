@@ -1969,6 +1969,347 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Clients",
+      "item": [
+        {
+          "name": "Lister clients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tableau JSON\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consulter une ressource inexistante",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/9999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refuser un identifiant fourni",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client atelier 5\",\n  \"prenom\": \"Test\",\n  \"email\": \"atelier5@example.com\",\n  \"telephone\": \"70000001\",\n  \"numPermis\": \"TP5\",\n  \"dateInscription\": \"2026-11-19\",\n  \"idClient\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refuser des données invalides",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client atelier 5\",\n  \"prenom\": \"Test\",\n  \"email\": \"\",\n  \"telephone\": \"70000001\",\n  \"numPermis\": \"TP5\",\n  \"dateInscription\": \"2026-11-19\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Créer Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client atelier 5\",\n  \"prenom\": \"Test\",\n  \"email\": \"atelier5@example.com\",\n  \"telephone\": \"70000001\",\n  \"numPermis\": \"TP5\",\n  \"dateInscription\": \"2026-11-19\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant généré\", () => pm.expect(pm.response.json().idClient).to.be.a(\"number\"));",
+                  "pm.environment.set(\"clientId\", pm.response.json().idClient);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consulter Client",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Modifier Client",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client atelier 5\",\n  \"prenom\": \"Modifie\",\n  \"email\": \"atelier5@example.com\",\n  \"telephone\": \"70000001\",\n  \"numPermis\": \"TP5\",\n  \"dateInscription\": \"2026-11-19\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Valeur modifiée\", () => pm.expect(pm.response.json().prenom).to.eql(\"Modifie\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refuser une modification invalide",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client atelier 5\",\n  \"prenom\": \"Test\",\n  \"email\": \"\",\n  \"telephone\": \"70000001\",\n  \"numPermis\": \"TP5\",\n  \"dateInscription\": \"2026-11-19\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Modifier une ressource inexistante",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/9999",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client atelier 5\",\n  \"prenom\": \"Test\",\n  \"email\": \"atelier5@example.com\",\n  \"telephone\": \"70000001\",\n  \"numPermis\": \"TP5\",\n  \"dateInscription\": \"2026-11-19\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Supprimer Client",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consulter après suppression",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Supprimer à nouveau",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
