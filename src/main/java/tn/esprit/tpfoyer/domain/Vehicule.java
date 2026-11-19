@@ -1,6 +1,8 @@
 package tn.esprit.tpfoyer.domain;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.math.BigDecimal;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "vehicule")
 @Getter
 @Setter
@@ -66,6 +69,7 @@ public class Vehicule {
     private Vehicule vehicule;
 
     @OneToMany(mappedBy = "vehicule", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
     @OneToMany(
             mappedBy = "vehicule",

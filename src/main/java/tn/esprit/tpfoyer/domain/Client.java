@@ -1,6 +1,8 @@
 package tn.esprit.tpfoyer.domain;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.time.LocalDate;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "client")
 @Getter
 @Setter
@@ -45,5 +48,6 @@ public class Client {
             fetch = FetchType.LAZY,
             cascade = CascadeType.PERSIST
     )
+    @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 }
