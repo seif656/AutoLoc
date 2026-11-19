@@ -38,6 +38,7 @@ public class Agence {
     private String telephone;
 
     @OneToMany(mappedBy = "agence", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Vehicule> vehicules = new ArrayList<>();
     @OneToMany(mappedBy = "agence", fetch = FetchType.LAZY)
     @JsonIgnore
