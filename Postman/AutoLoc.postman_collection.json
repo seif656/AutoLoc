@@ -144,8 +144,360 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Créer un contrat avec ses paiements",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\npm.test(\"Deux paiements créés avec leurs identifiants\", () => {\r\n    const body = pm.response.json();\r\n\r\n    pm.expect(body.idContrat).to.be.a(\"number\");\r\n    pm.expect(body.paiements).to.have.lengthOf(2);\r\n\r\n    body.paiements.forEach(paiement => {\r\n        pm.expect(paiement.idPaiement).to.be.a(\"number\");\r\n    });\r\n\r\n    pm.environment.set(\"contratId\", body.idContrat);\r\n    pm.environment.set(\"paiementId\", body.paiements[0].idPaiement);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"dateSignature\": \"2026-11-02\",\r\n  \"montantTotal\": 480.00,\r\n  \"valide\": true,\r\n  \"paiements\": [\r\n    {\r\n      \"montant\": 150.00,\r\n      \"datePaiement\": \"2026-11-02\",\r\n      \"modePaiement\": \"CARTE\"\r\n    },\r\n    {\r\n      \"montant\": 330.00,\r\n      \"datePaiement\": \"2026-11-06\",\r\n      \"modePaiement\": \"VIREMENT\"\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contrats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contrats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consulter le contrat créé",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contrats/{{contratId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Deux paiements rechargés\", () => pm.expect(pm.response.json().paiements).to.have.lengthOf(2));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Modifier un contrat",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contrats/{{contratId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-11-02\",\n  \"montantTotal\": 520,\n  \"valide\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Montant modifié et paiements conservés\", () => { const b=pm.response.json(); pm.expect(b.montantTotal).to.eql(520); pm.expect(b.paiements).to.have.lengthOf(2); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Modifier un contrat inexistant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contrats/9999",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-11-02\",\n  \"montantTotal\": 520,\n  \"valide\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refuser un montant négatif",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/contrats/{{contratId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-11-02\",\n  \"montantTotal\": -1,\n  \"valide\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consulter le paiement conservé",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/paiements/{{paiementId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Supprimer un contrat",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/contrats/{{contratId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Supprimer à nouveau le contrat",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/contrats/{{contratId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Vérifier la suppression en cascade",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/paiements/{{paiementId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
         }
       ]
+    },
+    {
+      "name": "Paiements",
+      "item": [
+        {
+          "name": "Lister les paiements",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => {\r\n    pm.response.to.have.status(200);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/paiements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "paiements"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consulter un paiement inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/paiements/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "paiements",
+                "9999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Créer un paiement (refusé)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/paiements",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 405\", () => pm.response.to.have.status(405));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8089",
+      "type": "string"
     }
   ]
 }
