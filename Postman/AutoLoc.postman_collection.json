@@ -491,6 +491,347 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Agences",
+      "item": [
+        {
+          "name": "Lister agences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/agences"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tableau JSON\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consulter une ressource inexistante",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/agences/9999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refuser un identifiant fourni",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/agences",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence atelier 5\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"Centre\",\n  \"telephone\": \"70000000\",\n  \"idAgence\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refuser des données invalides",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/agences",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"Centre\",\n  \"telephone\": \"70000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Créer Agence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/agences",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence atelier 5\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"Centre\",\n  \"telephone\": \"70000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant généré\", () => pm.expect(pm.response.json().idAgence).to.be.a(\"number\"));",
+                  "pm.environment.set(\"agenceId\", pm.response.json().idAgence);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consulter Agence",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/agences/{{agenceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Modifier Agence",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/agences/{{agenceId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence atelier 5\",\n  \"ville\": \"Sousse\",\n  \"adresse\": \"Centre\",\n  \"telephone\": \"70000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Valeur modifiée\", () => pm.expect(pm.response.json().ville).to.eql(\"Sousse\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refuser une modification invalide",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/agences/{{agenceId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"Centre\",\n  \"telephone\": \"70000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Modifier une ressource inexistante",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/agences/9999",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence atelier 5\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"Centre\",\n  \"telephone\": \"70000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Supprimer Agence",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/agences/{{agenceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Consulter après suppression",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/agences/{{agenceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Supprimer à nouveau",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/agences/{{agenceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
