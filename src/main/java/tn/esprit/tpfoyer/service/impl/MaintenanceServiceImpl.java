@@ -1,5 +1,10 @@
 package tn.esprit.tpfoyer.service.impl;
 
+import org.springframework.transaction.annotation.Transactional;
+import tn.esprit.tpfoyer.domain.Vehicule;
+import tn.esprit.tpfoyer.repository.IVehiculeRepository;
+import tn.esprit.tpfoyer.web.dto.AffectationMaintenanceResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.tpfoyer.domain.Maintenance;
@@ -14,6 +19,7 @@ import java.util.List;
 public class MaintenanceServiceImpl implements IMaintenanceService {
 
     private final IMaintenanceRepository maintenanceRepository;
+    private final IVehiculeRepository vehiculeRepository;
 
     private void validate(Maintenance maintenance) {
         if (maintenance == null) {
@@ -58,5 +64,17 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
     @Override
     public void deleteById(Long id) {
         maintenanceRepository.delete(findById(id));
+    }
+
+    @Override
+    @Transactional
+    public AffectationMaintenanceResponse affecterMaintenanceAVehicule(Long idMaintenance, Long idVehicule) {
+        Maintenance maintenance = findById(idMaintenance);
+        Vehicule vehicule = vehiculeRepository.findById(idVehicule)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicule", idVehicule));
+        maintenance.setVehicule(vehicule);
+        maintenanceRepository.save(maintenance);
+        return new AffectationMaintenanceResponse(
+                maintenance.getIdMaintenance(), vehicule.getIdVehicule(), vehicule.getImmatriculation());
     }
 }

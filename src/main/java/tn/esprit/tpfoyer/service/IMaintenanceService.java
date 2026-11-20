@@ -1,5 +1,7 @@
 package tn.esprit.tpfoyer.service;
 
+import tn.esprit.tpfoyer.web.dto.AffectationMaintenanceResponse;
+
 import tn.esprit.tpfoyer.domain.Maintenance;
 import java.util.List;
 
@@ -9,4 +11,5 @@ public interface IMaintenanceService {
     List<Maintenance> findAll();
     Maintenance update(Long id, Maintenance maintenance);
     void deleteById(Long id);
+    AffectationMaintenanceResponse affecterMaintenanceAVehicule(Long idMaintenance, Long idVehicule);
 }

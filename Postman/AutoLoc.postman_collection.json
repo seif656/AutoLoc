@@ -3161,6 +3161,454 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "Préparer véhicule pour affectation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/vehicules",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"DTO-{{$timestamp}}\",\n  \"marque\": \"Renault\",\n  \"modele\": \"Clio\",\n  \"categorie\": \"CITADINE\",\n  \"tarifJournalier\": 80,\n  \"statut\": \"DISPONIBLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"affMaintenanceVehiculeId\", pm.response.json().idVehicule);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Préparer Maintenance pour affectation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-12-10\",\n  \"dateFin\": \"2026-12-12\",\n  \"description\": \"Entretien atelier 5\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"affMaintenanceId\", pm.response.json().idMaintenance);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Affecter Maintenance",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": \"{{affMaintenanceVehiculeId}}\",\n  \"idMaintenance\": \"{{affMaintenanceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"DTO de réponse\", () => { const b=pm.response.json(); pm.expect(b.idVehicule).to.eql(Number(pm.environment.get(\"affMaintenanceVehiculeId\"))); pm.expect(b.idMaintenance).to.eql(Number(pm.environment.get(\"affMaintenanceId\"))); pm.expect(b).not.to.have.property(\"vehicule\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Répéter la même affectation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": \"{{affMaintenanceVehiculeId}}\",\n  \"idMaintenance\": \"{{affMaintenanceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"DTO de réponse\", () => { const b=pm.response.json(); pm.expect(b.idVehicule).to.eql(Number(pm.environment.get(\"affMaintenanceVehiculeId\"))); pm.expect(b.idMaintenance).to.eql(Number(pm.environment.get(\"affMaintenanceId\"))); pm.expect(b).not.to.have.property(\"vehicule\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation DTO - Champs absents",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation DTO - Véhicule nul",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": null,\n  \"idMaintenance\": \"{{affMaintenanceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation DTO - Véhicule négatif",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": -1,\n  \"idMaintenance\": \"{{affMaintenanceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation DTO - Identifiant cible nul",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": \"{{affMaintenanceVehiculeId}}\",\n  \"idMaintenance\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation DTO - Identifiant cible zéro",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": \"{{affMaintenanceVehiculeId}}\",\n  \"idMaintenance\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(400); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Véhicule introuvable pour affectation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": 999999,\n  \"idMaintenance\": \"{{affMaintenanceId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Maintenance introuvable pour affectation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/maintenances/affectation-vehicule",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVehicule\": \"{{affMaintenanceVehiculeId}}\",\n  \"idMaintenance\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur lisible\", () => { const b = pm.response.json(); pm.expect(b.statut).to.eql(404); pm.expect(b.message).to.be.a(\"string\"); pm.expect(b.horodatage).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Vérifier maintenance affectée",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/maintenances/{{affMaintenanceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lien persisté\", () => pm.expect(pm.response.json().vehicule.idVehicule).to.eql(Number(pm.environment.get(\"affMaintenanceVehiculeId\"))));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Nettoyer maintenance affectée",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/maintenances/{{affMaintenanceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Nettoyer véhicule affecté",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/vehicules/{{affMaintenanceVehiculeId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "response": []
         }
       ]
     }

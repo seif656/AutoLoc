@@ -1,5 +1,9 @@
 package tn.esprit.tpfoyer.web.controller;
 
+import jakarta.validation.Valid;
+import tn.esprit.tpfoyer.web.dto.AffectationMaintenanceRequest;
+import tn.esprit.tpfoyer.web.dto.AffectationMaintenanceResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -70,5 +74,18 @@ public class MaintenanceController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant de la ressource") @PathVariable("id") Long id) {
         maintenanceService.deleteById(id);
+    }
+
+    @Operation(summary = "Affecter une maintenance à un véhicule",
+            description = "Affecte une maintenance existante à un véhicule existant et retourne un DTO.")
+    @ApiResponse(responseCode = "200", description = "Maintenance affectée")
+    @ApiResponse(responseCode = "400", description = "Identifiants obligatoires et strictement positifs",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @ApiResponse(responseCode = "404", description = "Maintenance ou véhicule introuvable",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @PutMapping("/affectation-vehicule")
+    public AffectationMaintenanceResponse affecterMaintenanceAVehicule(
+            @Valid @RequestBody AffectationMaintenanceRequest request) {
+        return maintenanceService.affecterMaintenanceAVehicule(request.idMaintenance(), request.idVehicule());
     }
 }
