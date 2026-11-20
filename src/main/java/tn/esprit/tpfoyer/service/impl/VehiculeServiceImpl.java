@@ -1,5 +1,10 @@
 package tn.esprit.tpfoyer.service.impl;
 
+import org.springframework.transaction.annotation.Transactional;
+import tn.esprit.tpfoyer.domain.Equipement;
+import tn.esprit.tpfoyer.repository.IEquipementRepository;
+import tn.esprit.tpfoyer.web.dto.AffectationEquipementResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.tpfoyer.domain.Vehicule;
@@ -15,6 +20,7 @@ import java.util.List;
 public class VehiculeServiceImpl implements IVehiculeService {
 
     private final IVehiculeRepository vehiculeRepository;
+    private final IEquipementRepository equipementRepository;
 
     private void validate(Vehicule vehicule) {
         if (vehicule == null) {
@@ -77,5 +83,21 @@ public class VehiculeServiceImpl implements IVehiculeService {
     @Override
     public void deleteById(Long id) {
         vehiculeRepository.delete(findById(id));
+    }
+
+    @Override
+    @Transactional
+    public AffectationEquipementResponse affecterVehiculeAEquipement(Long idVehicule, Long idEquipement) {
+        Vehicule vehicule = findById(idVehicule);
+        Equipement equipement = equipementRepository.findById(idEquipement)
+                .orElseThrow(() -> new ResourceNotFoundException("Equipement", idEquipement));
+        boolean dejaAffecte = vehicule.getEquipements().stream()
+                .anyMatch(existing -> existing.getIdEquipement().equals(idEquipement));
+        if (!dejaAffecte) {
+            vehicule.getEquipements().add(equipement);
+            vehiculeRepository.save(vehicule);
+        }
+        return new AffectationEquipementResponse(vehicule.getIdVehicule(), equipement.getIdEquipement(),
+                vehicule.getImmatriculation(), equipement.getLibelle());
     }
 }

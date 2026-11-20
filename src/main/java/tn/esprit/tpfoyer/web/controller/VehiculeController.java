@@ -1,5 +1,9 @@
 package tn.esprit.tpfoyer.web.controller;
 
+import jakarta.validation.Valid;
+import tn.esprit.tpfoyer.web.dto.AffectationEquipementRequest;
+import tn.esprit.tpfoyer.web.dto.AffectationEquipementResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -70,5 +74,18 @@ public class VehiculeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant de la ressource") @PathVariable("id") Long id) {
         vehiculeService.deleteById(id);
+    }
+
+    @Operation(summary = "Affecter un véhicule à un équipement",
+            description = "Ajoute le lien véhicule-équipement sans doublon et retourne un DTO.")
+    @ApiResponse(responseCode = "200", description = "Véhicule affecté à l'équipement")
+    @ApiResponse(responseCode = "400", description = "Identifiants obligatoires et strictement positifs",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @ApiResponse(responseCode = "404", description = "Véhicule ou équipement introuvable",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @PutMapping("/affectation-equipement")
+    public AffectationEquipementResponse affecterVehiculeAEquipement(
+            @Valid @RequestBody AffectationEquipementRequest request) {
+        return vehiculeService.affecterVehiculeAEquipement(request.idVehicule(), request.idEquipement());
     }
 }

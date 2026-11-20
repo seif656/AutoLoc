@@ -1,5 +1,7 @@
 package tn.esprit.tpfoyer.service;
 
+import tn.esprit.tpfoyer.web.dto.AffectationEquipementResponse;
+
 import tn.esprit.tpfoyer.domain.Vehicule;
 import java.util.List;
 
@@ -9,4 +11,5 @@ public interface IVehiculeService {
     List<Vehicule> findAll();
     Vehicule update(Long id, Vehicule vehicule);
     void deleteById(Long id);
+    AffectationEquipementResponse affecterVehiculeAEquipement(Long idVehicule, Long idEquipement);
 }
