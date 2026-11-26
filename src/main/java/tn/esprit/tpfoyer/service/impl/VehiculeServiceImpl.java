@@ -1,5 +1,8 @@
 package tn.esprit.tpfoyer.service.impl;
 
+import tn.esprit.tpfoyer.domain.Maintenance;
+import tn.esprit.tpfoyer.repository.IMaintenanceRepository;
+
 import tn.esprit.tpfoyer.domain.Contrat;
 import tn.esprit.tpfoyer.repository.IContratRepository;
 
@@ -21,6 +24,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class VehiculeServiceImpl implements IVehiculeService {
+    private final IMaintenanceRepository maintenanceRepository;
+
     private final IContratRepository contratRepository;
 
 
@@ -115,5 +120,13 @@ public class VehiculeServiceImpl implements IVehiculeService {
             return List.of();
         }
         return List.of(contrat.getReservation().getVehicule());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vehicule> findByMaintenanceId(Long idMaintenance) {
+        Maintenance maintenance = maintenanceRepository.findById(idMaintenance)
+                .orElseThrow(() -> new ResourceNotFoundException("Maintenance", idMaintenance));
+        return maintenance.getVehicule() == null ? List.of() : List.of(maintenance.getVehicule());
     }
 }

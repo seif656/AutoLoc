@@ -77,4 +77,13 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
         return new AffectationMaintenanceResponse(
                 maintenance.getIdMaintenance(), vehicule.getIdVehicule(), vehicule.getImmatriculation());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Maintenance> findByVehiculeId(Long idVehicule) {
+        if (!vehiculeRepository.existsById(idVehicule)) {
+            throw new ResourceNotFoundException("Vehicule", idVehicule);
+        }
+        return maintenanceRepository.findByVehicule_IdVehiculeOrderByIdMaintenanceAsc(idVehicule);
+    }
 }

@@ -88,4 +88,14 @@ public class MaintenanceController {
             @Valid @RequestBody AffectationMaintenanceRequest request) {
         return maintenanceService.affecterMaintenanceAVehicule(request.idMaintenance(), request.idVehicule());
     }
+
+    @Operation(summary = "Lister les maintenances par identifiant de véhicule", description = "Retourne une liste vide si aucune association n'existe.")
+    @ApiResponse(responseCode = "200", description = "Liste retournée")
+    @ApiResponse(responseCode = "404", description = "Ressource recherchée introuvable",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @GetMapping("/vehicule/{idVehicule}")
+    public List<Maintenance> findByVehiculeId(
+            @Parameter(description = "Identifiant recherché") @PathVariable("idVehicule") Long idVehicule) {
+        return maintenanceService.findByVehiculeId(idVehicule);
+    }
 }

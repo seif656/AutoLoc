@@ -98,4 +98,14 @@ public class VehiculeController {
             @Parameter(description = "Identifiant recherché") @PathVariable("idContrat") Long idContrat) {
         return vehiculeService.findByContratId(idContrat);
     }
+
+    @Operation(summary = "Lister les véhicules par identifiant de maintenance", description = "Retourne une liste vide si aucune association n'existe.")
+    @ApiResponse(responseCode = "200", description = "Liste retournée")
+    @ApiResponse(responseCode = "404", description = "Ressource recherchée introuvable",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @GetMapping("/maintenance/{idMaintenance}")
+    public List<Vehicule> findByMaintenanceId(
+            @Parameter(description = "Identifiant recherché") @PathVariable("idMaintenance") Long idMaintenance) {
+        return vehiculeService.findByMaintenanceId(idMaintenance);
+    }
 }
