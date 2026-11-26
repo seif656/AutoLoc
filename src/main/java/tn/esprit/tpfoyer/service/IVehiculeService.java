@@ -12,4 +12,5 @@ public interface IVehiculeService {
     Vehicule update(Long id, Vehicule vehicule);
     void deleteById(Long id);
     AffectationEquipementResponse affecterVehiculeAEquipement(Long idVehicule, Long idEquipement);
+    List<Vehicule> findByContratId(Long idContrat);
 }

@@ -1,5 +1,8 @@
 package tn.esprit.tpfoyer.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,6 +15,7 @@ import lombok.ToString;
 import java.time.LocalDate;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "reservation")
 @Getter
 @Setter
@@ -42,6 +46,7 @@ public class Reservation {
             cascade = CascadeType.ALL
     )
 
+    @JsonIgnore
     private Contrat contrat;
     @ManyToOne(fetch = FetchType.LAZY)
     private Vehicule vehicule;

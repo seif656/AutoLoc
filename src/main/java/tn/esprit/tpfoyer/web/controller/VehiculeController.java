@@ -88,4 +88,14 @@ public class VehiculeController {
             @Valid @RequestBody AffectationEquipementRequest request) {
         return vehiculeService.affecterVehiculeAEquipement(request.idVehicule(), request.idEquipement());
     }
+
+    @Operation(summary = "Lister les véhicules par identifiant de contrat", description = "Retourne une liste vide si aucune association n'existe.")
+    @ApiResponse(responseCode = "200", description = "Liste retournée")
+    @ApiResponse(responseCode = "404", description = "Ressource recherchée introuvable",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @GetMapping("/contrat/{idContrat}")
+    public List<Vehicule> findByContratId(
+            @Parameter(description = "Identifiant recherché") @PathVariable("idContrat") Long idContrat) {
+        return vehiculeService.findByContratId(idContrat);
+    }
 }

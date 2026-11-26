@@ -1,5 +1,8 @@
 package tn.esprit.tpfoyer.service.impl;
 
+import tn.esprit.tpfoyer.domain.Contrat;
+import tn.esprit.tpfoyer.repository.IContratRepository;
+
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.tpfoyer.domain.Equipement;
 import tn.esprit.tpfoyer.repository.IEquipementRepository;
@@ -18,6 +21,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class VehiculeServiceImpl implements IVehiculeService {
+    private final IContratRepository contratRepository;
+
 
     private final IVehiculeRepository vehiculeRepository;
     private final IEquipementRepository equipementRepository;
@@ -99,5 +104,16 @@ public class VehiculeServiceImpl implements IVehiculeService {
         }
         return new AffectationEquipementResponse(vehicule.getIdVehicule(), equipement.getIdEquipement(),
                 vehicule.getImmatriculation(), equipement.getLibelle());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vehicule> findByContratId(Long idContrat) {
+        Contrat contrat = contratRepository.findById(idContrat)
+                .orElseThrow(() -> new ResourceNotFoundException("Contrat", idContrat));
+        if (contrat.getReservation() == null || contrat.getReservation().getVehicule() == null) {
+            return List.of();
+        }
+        return List.of(contrat.getReservation().getVehicule());
     }
 }

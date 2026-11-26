@@ -1,5 +1,8 @@
 package tn.esprit.tpfoyer.service.impl;
 
+import org.springframework.transaction.annotation.Transactional;
+import tn.esprit.tpfoyer.repository.IVehiculeRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.tpfoyer.domain.Contrat;
@@ -13,6 +16,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ContratServiceImpl implements IContratService {
+    private final IVehiculeRepository vehiculeRepository;
+
 
     private final IContratRepository contratRepository;
 
@@ -71,5 +76,14 @@ public class ContratServiceImpl implements IContratService {
                     "Le montant total doit être positif ou nul"
             );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Contrat> findByVehiculeId(Long idVehicule) {
+        if (!vehiculeRepository.existsById(idVehicule)) {
+            throw new ResourceNotFoundException("Vehicule", idVehicule);
+        }
+        return contratRepository.findByReservation_Vehicule_IdVehiculeOrderByIdContratAsc(idVehicule);
     }
 }

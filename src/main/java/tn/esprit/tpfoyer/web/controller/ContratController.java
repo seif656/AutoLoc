@@ -71,4 +71,14 @@ public class ContratController {
     public void deleteById(@Parameter(description = "Identifiant de la ressource") @PathVariable("id") Long id) {
         contratService.deleteById(id);
     }
+
+    @Operation(summary = "Lister les contrats par identifiant de véhicule", description = "Retourne une liste vide si aucune association n'existe.")
+    @ApiResponse(responseCode = "200", description = "Liste retournée")
+    @ApiResponse(responseCode = "404", description = "Ressource recherchée introuvable",
+            content = @Content(schema = @Schema(implementation = GlobalExceptionHandler.ApiError.class)))
+    @GetMapping("/vehicule/{idVehicule}")
+    public List<Contrat> findByVehiculeId(
+            @Parameter(description = "Identifiant recherché") @PathVariable("idVehicule") Long idVehicule) {
+        return contratService.findByVehiculeId(idVehicule);
+    }
 }
